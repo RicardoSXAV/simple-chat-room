@@ -21,6 +21,7 @@ export const getSignedPostUrl = async (
         Fields: {
           key,
         },
+        Conditions: [["content-length-range", 0, 1000000]], // 1MB
         Expires: 60,
       },
       (error, signed) => {
