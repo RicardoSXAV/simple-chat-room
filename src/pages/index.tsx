@@ -1,5 +1,9 @@
 import { trpc } from "../utils/trpc";
-import { ChatArea, MessagesArea, PageContainer } from "./index.styles";
+import {
+  ChatArea,
+  MessagesArea,
+  PageContainer,
+} from "../shared/styles/index.styles";
 import Navbar from "../components/Navbar";
 import MessageInput from "../components/MessageInput";
 import MessageItem from "../components/MessageItem";
