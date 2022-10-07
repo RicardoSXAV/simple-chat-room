@@ -33,10 +33,12 @@ const appRouter = trpc.router({
   getImageUrl: trpc.procedure
     .input(
       z.object({
-        imageId: z.string(),
+        imageId: z.string().optional(),
       })
     )
-    .mutation(async ({ input }) => {
+    .query(async ({ input }) => {
+      if (!input.imageId) return "";
+
       const url = await getSignedUrl(input.imageId);
 
       return url;

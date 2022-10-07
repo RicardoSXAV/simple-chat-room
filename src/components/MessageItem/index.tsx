@@ -7,24 +7,19 @@ interface MessageItemProps {
   text: string;
   imageId?: string;
   createdAt?: string;
+  bottomMessageRef?: React.RefObject<HTMLDivElement>;
 }
 
 export default function MessageItem({
   text,
   imageId,
   createdAt,
+  bottomMessageRef,
 }: MessageItemProps) {
-  const { mutate: getImageUrl, data: imageUrl } =
-    trpc.getImageUrl.useMutation();
-
-  useEffect(() => {
-    if (imageId) {
-      getImageUrl({ imageId });
-    }
-  }, []);
+  const { data: imageUrl } = trpc.getImageUrl.useQuery({ imageId });
 
   return (
-    <Container>
+    <Container ref={bottomMessageRef}>
       <Bubble>
         {imageUrl && <MessageImage src={imageUrl} />}
 
