@@ -71,3 +71,11 @@ export const Button = styled.button`
     transition: ease-in-out 0.05s;
   }
 `;
+
+export const ErrorText = styled.p`
+  margin: 0 70px;
+
+  font-size: 1rem;
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.errorRed};
+`;

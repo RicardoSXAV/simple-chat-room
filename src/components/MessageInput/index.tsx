@@ -1,8 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 import { trpc } from "../../utils/trpc";
-import { Button, Container, ImageInput, ImagePreview, Input } from "./style";
+import {
+  Button,
+  Container,
+  ErrorText,
+  ImageInput,
+  ImagePreview,
+  Input,
+} from "./style";
 import Camera from "../../assets/images/camera.svg";
 import SendButton from "../../assets/images/send-button.svg";
 import { PresignedPost } from "aws-sdk/clients/s3";
@@ -14,6 +21,7 @@ interface MessageInputProps {
 export default function MessageInput({ refetchMessages }: MessageInputProps) {
   const [messageText, setMessageText] = useState("");
   const [messageImage, setMessageImage] = useState<File>();
+  const [messageImageError, setMessageImageError] = useState(false);
 
   const { mutate: sendMessage } = trpc.sendMessage.useMutation({
     onSuccess: () => {
@@ -23,12 +31,22 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
   });
   const { mutate: getImagePostUrl } = trpc.getImagePostUrl.useMutation({
     onSuccess: async (data) => {
-      const key = await uploadImage(data);
-
-      sendMessage({ text: messageText, imageId: key });
-      setMessageImage(undefined);
+      await uploadImage(data).then((key) => {
+        if (key) {
+          sendMessage({ text: messageText, imageId: key });
+          setMessageImage(undefined);
+        }
+      });
     },
   });
+
+  useEffect(() => {
+    if (messageImageError) {
+      setTimeout(() => {
+        setMessageImageError(false);
+      }, 3000);
+    }
+  }, [messageImageError]);
 
   interface UploadImageParams {
     data: PresignedPost;
@@ -36,25 +54,29 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
   }
 
   const uploadImage = async (params: UploadImageParams | undefined) => {
-    if (!messageImage) return;
+    try {
+      if (!messageImage) return;
 
-    const formData = new FormData();
+      const formData = new FormData();
 
-    if (params) {
-      const { data, key } = params;
+      if (params) {
+        const { data, key } = params;
 
-      const form = {
-        ...data.fields,
-        file: messageImage,
-      };
+        const form = {
+          ...data.fields,
+          file: messageImage,
+        };
 
-      for (const field in form) {
-        formData.append(field, form[field as keyof typeof form]);
+        for (const field in form) {
+          formData.append(field, form[field as keyof typeof form]);
+        }
+
+        await axios.post(data.url, formData);
+
+        return key;
       }
-
-      await axios.post(data.url, formData).catch((error) => console.log(error));
-
-      return key;
+    } catch (error) {
+      setMessageImageError(true);
     }
   };
 
@@ -71,27 +93,32 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
   };
 
   return (
-    <Container>
-      <Button style={{ marginLeft: 20, marginRight: 40 }}>
-        <ImageInput
-          onChange={(event) => setMessageImage(event.target.files?.[0])}
+    <>
+      {messageImageError && (
+        <ErrorText>Could not send the provided image</ErrorText>
+      )}
+      <Container>
+        <Button style={{ marginLeft: 20, marginRight: 40 }}>
+          <ImageInput
+            onChange={(event) => setMessageImage(event.target.files?.[0])}
+          />
+          {messageImage ? (
+            <ImagePreview src={URL.createObjectURL(messageImage)} />
+          ) : (
+            <Camera />
+          )}
+        </Button>
+
+        <Input
+          placeholder="Enter message..."
+          onChange={(event) => setMessageText(event.target.value)}
+          value={messageText}
         />
-        {messageImage ? (
-          <ImagePreview src={URL.createObjectURL(messageImage)} />
-        ) : (
-          <Camera />
-        )}
-      </Button>
 
-      <Input
-        placeholder="Enter message..."
-        onChange={(event) => setMessageText(event.target.value)}
-        value={messageText}
-      />
-
-      <Button onClick={handleMessageSend}>
-        <SendButton />
-      </Button>
-    </Container>
+        <Button onClick={handleMessageSend}>
+          <SendButton />
+        </Button>
+      </Container>
+    </>
   );
 }
