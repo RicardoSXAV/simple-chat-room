@@ -1,5 +1,11 @@
 import AWS from "aws-sdk";
 
+const credentials = {
+  accessKeyId: String(process.env.S3_ACCESS_KEY),
+  secretAccessKey: String(process.env.S3_SECRET_KEY),
+};
+
+AWS.config.update({ credentials, region: "sa-east-1" });
 const s3 = new AWS.S3();
 
 export const getSignedUrl = async (key: string) => {

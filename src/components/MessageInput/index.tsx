@@ -35,23 +35,27 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
     key: string;
   }
 
-  const uploadImage = async ({ data, key }: UploadImageParams) => {
+  const uploadImage = async (params: UploadImageParams | undefined) => {
     if (!messageImage) return;
 
     const formData = new FormData();
 
-    const form = {
-      ...data.fields,
-      file: messageImage,
-    };
+    if (params) {
+      const { data, key } = params;
 
-    for (const field in form) {
-      formData.append(field, form[field as keyof typeof form]);
+      const form = {
+        ...data.fields,
+        file: messageImage,
+      };
+
+      for (const field in form) {
+        formData.append(field, form[field as keyof typeof form]);
+      }
+
+      await axios.post(data.url, formData).catch((error) => console.log(error));
+
+      return key;
     }
-
-    await axios.post(data.url, formData).catch((error) => console.log(error));
-
-    return key;
   };
 
   const handleMessageSend = async () => {
@@ -61,7 +65,9 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
       return;
     }
 
-    sendMessage({ text: messageText });
+    if (messageText) {
+      sendMessage({ text: messageText });
+    }
   };
 
   return (

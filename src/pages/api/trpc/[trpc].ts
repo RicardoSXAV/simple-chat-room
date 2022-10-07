@@ -12,14 +12,7 @@ import { randomUUID } from "node:crypto";
 import { Message } from "../../../models/Message";
 import { getSignedPostUrl, getSignedUrl } from "../../../utils/aws";
 
-const credentials = {
-  accessKeyId: String(process.env.S3_ACCESS_KEY),
-  secretAccessKey: String(process.env.S3_SECRET_KEY),
-};
-
 const trpc = initTRPC.create();
-
-AWS.config.update({ credentials, region: "sa-east-1" });
 
 const appRouter = trpc.router({
   getMessages: trpc.procedure.query(async () => {
@@ -55,11 +48,15 @@ const appRouter = trpc.router({
       })
     )
     .mutation(async ({ input }) => {
-      const key = `${randomUUID()}-${input.fileName}`;
+      try {
+        const key = `${randomUUID()}-${input.fileName}`;
 
-      const signed = await getSignedPostUrl(key);
+        const signed = await getSignedPostUrl(key);
 
-      return { data: signed, key };
+        return { data: signed, key };
+      } catch (error) {
+        console.log(error);
+      }
     }),
 });
 
