@@ -9,6 +9,7 @@ import {
   ImageInput,
   ImagePreview,
   Input,
+  Wrapper,
 } from "./style";
 import Camera from "../../assets/images/camera.svg";
 import SendButton from "../../assets/images/send-button.svg";
@@ -93,7 +94,7 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
   };
 
   return (
-    <>
+    <Wrapper>
       {messageImageError && (
         <ErrorText>Could not send the provided image</ErrorText>
       )}
@@ -119,6 +120,6 @@ export default function MessageInput({ refetchMessages }: MessageInputProps) {
           <SendButton />
         </Button>
       </Container>
-    </>
+    </Wrapper>
   );
 }
